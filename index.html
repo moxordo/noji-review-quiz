@@ -158,7 +158,38 @@
     width: 100%;
     font-family: inherit;
     margin-bottom: 10px;
+    position: relative;
+    overflow: hidden;
   }
+  .choice-btn .inline-bar {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 0;
+    background: rgba(108,92,231,0.1);
+    transition: width 1s cubic-bezier(0.22,1,0.36,1);
+    border-radius: 10px;
+    z-index: 0;
+  }
+  .choice-btn.correct .inline-bar { background: rgba(0,184,148,0.12); }
+  .choice-btn.wrong .inline-bar { background: rgba(225,112,85,0.1); }
+  .choice-btn .marker,
+  .choice-btn .choice-label,
+  .choice-btn .choice-stat {
+    position: relative;
+    z-index: 1;
+  }
+  .choice-label { flex: 1; }
+  .choice-stat {
+    font-size: 0.82em;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-left: auto;
+    padding-left: 12px;
+    opacity: 0;
+    transition: opacity 0.5s ease 0.3s;
+    white-space: nowrap;
+  }
+  .choice-btn.revealed .choice-stat { opacity: 1; }
   .choice-btn:hover:not(.disabled) {
     border-color: var(--accent-light);
     background: var(--accent-bg);
@@ -210,48 +241,6 @@
     animation: fadeIn 0.4s ease;
   }
   .choice-review.visible { display: block; }
-
-  /* Bar Chart */
-  .result-chart {
-    display: none;
-    margin: 24px 0;
-    animation: fadeIn 0.6s ease;
-  }
-  .result-chart.visible { display: block; }
-  .bar-item { margin-bottom: 14px; }
-  .bar-label {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 4px;
-    font-size: 0.9em;
-    font-weight: 600;
-  }
-  .bar-track {
-    height: 32px;
-    background: #f0f0f0;
-    border-radius: 8px;
-    overflow: hidden;
-    position: relative;
-  }
-  .bar-fill {
-    height: 100%;
-    border-radius: 8px;
-    width: 0;
-    transition: width 1s cubic-bezier(0.22,1,0.36,1);
-    display: flex;
-    align-items: center;
-    padding-left: 10px;
-    font-size: 0.8em;
-    font-weight: 700;
-    color: white;
-  }
-  .bar-1 { background: linear-gradient(90deg, var(--accent), var(--accent-light)); }
-  .bar-2 { background: linear-gradient(90deg, #00b894, #55efc4); }
-  .bar-3 { background: linear-gradient(90deg, #e17055, #fab1a0); }
-  .bar-4 { background: linear-gradient(90deg, #74b9ff, #a29bfe); }
-  .bar-5 { background: linear-gradient(90deg, #fdcb6e, #ffeaa7); }
-  .bar-6 { background: linear-gradient(90deg, #636e72, #b2bec3); }
-  .bar-7 { background: linear-gradient(90deg, #fd79a8, #e84393); }
 
   /* Insight callout */
   .result-insight {
@@ -526,8 +515,9 @@
 
     <div class="choice-list" id="q1choices" data-correct="exam" data-quiz="quiz1">
 
-      <button class="choice-btn" onclick="submitChoice(this)" data-value="exam">
-        <span class="marker">A</span>시험/자격증 준비
+      <button class="choice-btn" onclick="submitChoice(this)" data-value="exam" data-pct="37" data-stat="~37%">
+        <div class="inline-bar"></div>
+        <span class="marker">A</span><span class="choice-label">시험/자격증 준비</span><span class="choice-stat">~37%</span>
       </button>
       <div class="choice-review" data-for="exam">
         <div class="review-card" onclick="toggleTranslation(this)">
@@ -538,8 +528,9 @@
         </div>
       </div>
 
-      <button class="choice-btn" onclick="submitChoice(this)" data-value="lang">
-        <span class="marker">B</span>언어 학습
+      <button class="choice-btn" onclick="submitChoice(this)" data-value="lang" data-pct="22" data-stat="~22%">
+        <div class="inline-bar"></div>
+        <span class="marker">B</span><span class="choice-label">언어 학습</span><span class="choice-stat">~22%</span>
       </button>
       <div class="choice-review" data-for="lang">
         <div class="review-card" onclick="toggleTranslation(this)">
@@ -550,8 +541,9 @@
         </div>
       </div>
 
-      <button class="choice-btn" onclick="submitChoice(this)" data-value="academic">
-        <span class="marker">C</span>일반 학업
+      <button class="choice-btn" onclick="submitChoice(this)" data-value="academic" data-pct="18" data-stat="~18%">
+        <div class="inline-bar"></div>
+        <span class="marker">C</span><span class="choice-label">일반 학업</span><span class="choice-stat">~18%</span>
       </button>
       <div class="choice-review" data-for="academic">
         <div class="review-card" onclick="toggleTranslation(this)">
@@ -562,8 +554,9 @@
         </div>
       </div>
 
-      <button class="choice-btn" onclick="submitChoice(this)" data-value="switch">
-        <span class="marker">D</span>다른 앱에서 전환
+      <button class="choice-btn" onclick="submitChoice(this)" data-value="switch" data-pct="9" data-stat="~9%">
+        <div class="inline-bar"></div>
+        <span class="marker">D</span><span class="choice-label">다른 앱에서 전환</span><span class="choice-stat">~9%</span>
       </button>
       <div class="choice-review" data-for="switch">
         <div class="review-card" onclick="toggleTranslation(this)">
@@ -574,8 +567,9 @@
         </div>
       </div>
 
-      <button class="choice-btn" onclick="submitChoice(this)" data-value="med">
-        <span class="marker">E</span>의학/과학 공부
+      <button class="choice-btn" onclick="submitChoice(this)" data-value="med" data-pct="8" data-stat="~8%">
+        <div class="inline-bar"></div>
+        <span class="marker">E</span><span class="choice-label">의학/과학 공부</span><span class="choice-stat">~8%</span>
       </button>
       <div class="choice-review" data-for="med">
         <div class="review-card" onclick="toggleTranslation(this)">
@@ -586,8 +580,9 @@
         </div>
       </div>
 
-      <button class="choice-btn" onclick="submitChoice(this)" data-value="pro">
-        <span class="marker">F</span>자기계발/전문직
+      <button class="choice-btn" onclick="submitChoice(this)" data-value="pro" data-pct="6" data-stat="~6%">
+        <div class="inline-bar"></div>
+        <span class="marker">F</span><span class="choice-label">자기계발/전문직</span><span class="choice-stat">~6%</span>
       </button>
       <div class="choice-review" data-for="pro">
         <div class="review-card" onclick="toggleTranslation(this)">
@@ -598,33 +593,6 @@
         </div>
       </div>
 
-    </div>
-
-    <div class="result-chart" id="q1chart">
-      <div class="bar-item">
-        <div class="bar-label"><span>시험/자격증 준비</span><span>~37%</span></div>
-        <div class="bar-track"><div class="bar-fill bar-1" data-width="37"></div></div>
-      </div>
-      <div class="bar-item">
-        <div class="bar-label"><span>언어 학습</span><span>~22%</span></div>
-        <div class="bar-track"><div class="bar-fill bar-2" data-width="22"></div></div>
-      </div>
-      <div class="bar-item">
-        <div class="bar-label"><span>일반 학업</span><span>~18%</span></div>
-        <div class="bar-track"><div class="bar-fill bar-3" data-width="18"></div></div>
-      </div>
-      <div class="bar-item">
-        <div class="bar-label"><span>다른 앱에서 전환</span><span>~9%</span></div>
-        <div class="bar-track"><div class="bar-fill bar-4" data-width="9"></div></div>
-      </div>
-      <div class="bar-item">
-        <div class="bar-label"><span>의학/과학 공부</span><span>~8%</span></div>
-        <div class="bar-track"><div class="bar-fill bar-5" data-width="8"></div></div>
-      </div>
-      <div class="bar-item">
-        <div class="bar-label"><span>자기계발/전문직</span><span>~6%</span></div>
-        <div class="bar-track"><div class="bar-fill bar-6" data-width="6"></div></div>
-      </div>
     </div>
 
     <div class="result-insight" id="q1insight">
@@ -647,8 +615,9 @@
 
     <div class="choice-list" id="q2choices" data-correct="ai" data-quiz="quiz2">
 
-      <button class="choice-btn" onclick="submitChoice(this)" data-value="ai">
-        <span class="marker">A</span>AI 카드 생성
+      <button class="choice-btn" onclick="submitChoice(this)" data-value="ai" data-pct="100" data-stat="~557회">
+        <div class="inline-bar"></div>
+        <span class="marker">A</span><span class="choice-label">AI 카드 생성</span><span class="choice-stat">~557회</span>
       </button>
       <div class="choice-review" data-for="ai">
         <div class="review-card" onclick="toggleTranslation(this)">
@@ -659,8 +628,9 @@
         </div>
       </div>
 
-      <button class="choice-btn" onclick="submitChoice(this)" data-value="reminder">
-        <span class="marker">B</span>학습 리마인더
+      <button class="choice-btn" onclick="submitChoice(this)" data-value="reminder" data-pct="89" data-stat="~494회">
+        <div class="inline-bar"></div>
+        <span class="marker">B</span><span class="choice-label">학습 리마인더</span><span class="choice-stat">~494회</span>
       </button>
       <div class="choice-review" data-for="reminder">
         <div class="review-card" onclick="toggleTranslation(this)">
@@ -671,8 +641,9 @@
         </div>
       </div>
 
-      <button class="choice-btn" onclick="submitChoice(this)" data-value="offline">
-        <span class="marker">C</span>오프라인 모드
+      <button class="choice-btn" onclick="submitChoice(this)" data-value="offline" data-pct="79" data-stat="~439회">
+        <div class="inline-bar"></div>
+        <span class="marker">C</span><span class="choice-label">오프라인 모드</span><span class="choice-stat">~439회</span>
       </button>
       <div class="choice-review" data-for="offline">
         <div class="review-card" onclick="toggleTranslation(this)">
@@ -683,8 +654,9 @@
         </div>
       </div>
 
-      <button class="choice-btn" onclick="submitChoice(this)" data-value="sync">
-        <span class="marker">D</span>기기 간 동기화
+      <button class="choice-btn" onclick="submitChoice(this)" data-value="sync" data-pct="50" data-stat="~277회">
+        <div class="inline-bar"></div>
+        <span class="marker">D</span><span class="choice-label">기기 간 동기화</span><span class="choice-stat">~277회</span>
       </button>
       <div class="choice-review" data-for="sync">
         <div class="review-card" onclick="toggleTranslation(this)">
@@ -695,8 +667,9 @@
         </div>
       </div>
 
-      <button class="choice-btn" onclick="submitChoice(this)" data-value="sr">
-        <span class="marker">E</span>간격 반복 학습
+      <button class="choice-btn" onclick="submitChoice(this)" data-value="sr" data-pct="34" data-stat="~190회">
+        <div class="inline-bar"></div>
+        <span class="marker">E</span><span class="choice-label">간격 반복 학습</span><span class="choice-stat">~190회</span>
       </button>
       <div class="choice-review" data-for="sr">
         <div class="review-card" onclick="toggleTranslation(this)">
@@ -707,8 +680,9 @@
         </div>
       </div>
 
-      <button class="choice-btn" onclick="submitChoice(this)" data-value="theme">
-        <span class="marker">F</span>테마/커스터마이징
+      <button class="choice-btn" onclick="submitChoice(this)" data-value="theme" data-pct="32" data-stat="~176회">
+        <div class="inline-bar"></div>
+        <span class="marker">F</span><span class="choice-label">테마/커스터마이징</span><span class="choice-stat">~176회</span>
       </button>
       <div class="choice-review" data-for="theme">
         <div class="review-card" onclick="toggleTranslation(this)">
@@ -719,8 +693,9 @@
         </div>
       </div>
 
-      <button class="choice-btn" onclick="submitChoice(this)" data-value="deck">
-        <span class="marker">G</span>기성 덱
+      <button class="choice-btn" onclick="submitChoice(this)" data-value="deck" data-pct="27" data-stat="~152회">
+        <div class="inline-bar"></div>
+        <span class="marker">G</span><span class="choice-label">기성 덱</span><span class="choice-stat">~152회</span>
       </button>
       <div class="choice-review" data-for="deck">
         <div class="review-card" onclick="toggleTranslation(this)">
@@ -731,37 +706,6 @@
         </div>
       </div>
 
-    </div>
-
-    <div class="result-chart" id="q2chart">
-      <div class="bar-item">
-        <div class="bar-label"><span>1. AI 카드 생성</span><span>~557회</span></div>
-        <div class="bar-track"><div class="bar-fill bar-1" data-width="100"></div></div>
-      </div>
-      <div class="bar-item">
-        <div class="bar-label"><span>2. 학습 리마인더</span><span>~494회</span></div>
-        <div class="bar-track"><div class="bar-fill bar-2" data-width="89"></div></div>
-      </div>
-      <div class="bar-item">
-        <div class="bar-label"><span>3. 오프라인 모드</span><span>~439회</span></div>
-        <div class="bar-track"><div class="bar-fill bar-3" data-width="79"></div></div>
-      </div>
-      <div class="bar-item">
-        <div class="bar-label"><span>4. 기기 간 동기화</span><span>~277회</span></div>
-        <div class="bar-track"><div class="bar-fill bar-4" data-width="50"></div></div>
-      </div>
-      <div class="bar-item">
-        <div class="bar-label"><span>5. 간격 반복 학습</span><span>~190회</span></div>
-        <div class="bar-track"><div class="bar-fill bar-5" data-width="34"></div></div>
-      </div>
-      <div class="bar-item">
-        <div class="bar-label"><span>6. 테마/커스터마이징</span><span>~176회</span></div>
-        <div class="bar-track"><div class="bar-fill bar-6" data-width="32"></div></div>
-      </div>
-      <div class="bar-item">
-        <div class="bar-label"><span>7. 기성 덱</span><span>~152회</span></div>
-        <div class="bar-track"><div class="bar-fill bar-7" data-width="27"></div></div>
-      </div>
     </div>
 
     <div class="result-insight" id="q2insight">
@@ -1074,7 +1018,7 @@ function goToQuiz(n) {
   document.getElementById('progressBar').style.width = (n * 20) + '%';
 }
 
-/* Q1 & Q2: Click a choice → instant feedback with per-choice reviews */
+/* Q1 & Q2: Click a choice → instant feedback with inline bars + per-choice reviews */
 function submitChoice(btn) {
   const container = btn.parentElement;
   if (container.classList.contains('answered')) return;
@@ -1085,12 +1029,22 @@ function submitChoice(btn) {
   const quizId = container.dataset.quiz;
   const prefix = quizId === 'quiz1' ? 'q1' : 'q2';
 
-  // Mark all disabled, highlight correct/wrong
+  // Mark all disabled, highlight correct/wrong, animate inline bars
   container.querySelectorAll('.choice-btn').forEach(b => {
-    b.classList.add('disabled');
+    b.classList.add('disabled', 'revealed');
     if (b.dataset.value === correctValue) b.classList.add('correct');
   });
   if (chosenValue !== correctValue) btn.classList.add('wrong');
+
+  // Animate inline bars
+  setTimeout(() => {
+    container.querySelectorAll('.choice-btn').forEach(b => {
+      const bar = b.querySelector('.inline-bar');
+      if (bar && b.dataset.pct) {
+        bar.style.width = b.dataset.pct + '%';
+      }
+    });
+  }, 50);
 
   // Show ALL per-choice review cards
   container.querySelectorAll('.choice-review').forEach(r => {
@@ -1098,24 +1052,12 @@ function submitChoice(btn) {
     r.style.display = 'block';
   });
 
-  // Show chart + insight
-  animateBars(prefix + 'chart');
+  // Show insight
   setTimeout(() => {
     const insight = document.getElementById(prefix + 'insight');
     insight.classList.add('visible');
     insight.style.display = 'block';
   }, 500);
-}
-
-function animateBars(chartId) {
-  const chart = document.getElementById(chartId);
-  chart.classList.add('visible');
-  chart.style.display = 'block';
-  setTimeout(() => {
-    chart.querySelectorAll('.bar-fill').forEach(bar => {
-      bar.style.width = bar.dataset.width + '%';
-    });
-  }, 100);
 }
 
 /* Q3: Flip region card → show its review below the grid */
@@ -1201,7 +1143,9 @@ function restartQuiz() {
     const choices = document.getElementById(prefix + 'choices');
     choices.classList.remove('answered');
     choices.querySelectorAll('.choice-btn').forEach(b => {
-      b.classList.remove('selected', 'disabled', 'correct', 'wrong');
+      b.classList.remove('selected', 'disabled', 'correct', 'wrong', 'revealed');
+      const bar = b.querySelector('.inline-bar');
+      if (bar) bar.style.width = '0';
     });
     choices.querySelectorAll('.choice-review').forEach(r => {
       r.classList.remove('visible');
@@ -1262,4 +1206,3 @@ function restartQuiz() {
 
 </body>
 </html>
-
