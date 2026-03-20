@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Noji 리뷰 인사이트 퀴즈</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #faf9f7;
+    --card-bg: #ffffff;
+    --text: #1a1a1a;
+    --text-secondary: #666;
+    --accent: #6c5ce7;
+    --accent-light: #a29bfe;
+    --accent-bg: #f0eeff;
+    --success: #00b894;
+    --warm: #fdcb6e;
+    --coral: #e17055;
+    --blue: #74b9ff;
+    --border: #eee;
+    --shadow: 0 2px 20px rgba(0,0,0,0.06);
+    --shadow-hover: 0 4px 30px rgba(0,0,0,0.1);
+    --radius: 16px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  /* Landing Page */
+  .landing {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .landing h1 {
+    font-size: 2.4em;
+    font-weight: 800;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, var(--accent), var(--coral));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .landing .subtitle {
+    font-size: 1.1em;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+  .landing .stats {
+    display: flex;
+    gap: 24px;
+    margin: 28px 0;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .landing .stat { text-align: center; }
+  .landing .stat .num {
+    font-size: 2em;
+    font-weight: 800;
+    color: var(--accent);
+  }
+  .landing .stat .label {
+    font-size: 0.85em;
+    color: var(--text-secondary);
+  }
+  .btn {
+    display: inline-block;
+    padding: 16px 40px;
+    background: linear-gradient(135deg, var(--accent), #5a4bd1);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 1.1em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+  }
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(108,92,231,0.4);
+  }
+  .btn:active { transform: translateY(0); }
+
+  /* Quiz Sections */
+  .quiz-section {
+    display: none;
+    padding: 30px 0;
+    animation: fadeIn 0.5s ease;
+  }
+  .quiz-section.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .quiz-header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .quiz-number {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    line-height: 36px;
+    font-weight: 700;
+    font-size: 0.9em;
+    margin-bottom: 12px;
+  }
+  .quiz-header h2 {
+    font-size: 1.6em;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  .quiz-header p {
+    color: var(--text-secondary);
+    font-size: 0.95em;
+  }
+
+  /* Choice list (vertical, like rank-list) */
+  .choice-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 24px;
+  }
+  .choice-btn {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    background: var(--card-bg);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 1em;
+    text-align: left;
+    width: 100%;
+    font-family: inherit;
+    margin-bottom: 10px;
+  }
+  .choice-btn:hover:not(.disabled) {
+    border-color: var(--accent-light);
+    background: var(--accent-bg);
+  }
+  .choice-btn.selected {
+    border-color: var(--accent);
+    background: var(--accent-bg);
+  }
+  .choice-btn.disabled { cursor: default; }
+  .choice-btn.correct {
+    border-color: var(--success) !important;
+    background: #e6fff9 !important;
+  }
+  .choice-btn.correct .marker {
+    border-color: var(--success) !important;
+    background: var(--success) !important;
+    color: white !important;
+  }
+  .choice-btn.wrong {
+    border-color: var(--coral) !important;
+    background: #fff5f3 !important;
+  }
+  .choice-btn.wrong .marker {
+    border-color: var(--coral) !important;
+    background: var(--coral) !important;
+    color: white !important;
+  }
+  .choice-btn.disabled:not(.correct):not(.wrong) { opacity: 0.5; }
+  .choice-btn .marker {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid #ccc;
+    margin-right: 14px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8em; font-weight: 700;
+    transition: all 0.2s;
+  }
+  .choice-btn.selected .marker {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: white;
+  }
+
+  /* Per-choice review (hidden by default, like rank-review) */
+  .choice-review {
+    display: none;
+    margin: -2px 0 10px 0;
+    animation: fadeIn 0.4s ease;
+  }
+  .choice-review.visible { display: block; }
+
+  /* Bar Chart */
+  .result-chart {
+    display: none;
+    margin: 24px 0;
+    animation: fadeIn 0.6s ease;
+  }
+  .result-chart.visible { display: block; }
+  .bar-item { margin-bottom: 14px; }
+  .bar-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    font-size: 0.9em;
+    font-weight: 600;
+  }
+  .bar-track {
+    height: 32px;
+    background: #f0f0f0;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 8px;
+    width: 0;
+    transition: width 1s cubic-bezier(0.22,1,0.36,1);
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+    font-size: 0.8em;
+    font-weight: 700;
+    color: white;
+  }
+  .bar-1 { background: linear-gradient(90deg, var(--accent), var(--accent-light)); }
+  .bar-2 { background: linear-gradient(90deg, #00b894, #55efc4); }
+  .bar-3 { background: linear-gradient(90deg, #e17055, #fab1a0); }
+  .bar-4 { background: linear-gradient(90deg, #74b9ff, #a29bfe); }
+  .bar-5 { background: linear-gradient(90deg, #fdcb6e, #ffeaa7); }
+  .bar-6 { background: linear-gradient(90deg, #636e72, #b2bec3); }
+  .bar-7 { background: linear-gradient(90deg, #fd79a8, #e84393); }
+
+  /* Insight callout */
+  .result-insight {
+    display: none;
+    background: var(--accent-bg);
+    border-left: 4px solid var(--accent);
+    padding: 16px 20px;
+    border-radius: 0 12px 12px 0;
+    margin: 20px 0;
+    animation: fadeIn 0.5s ease;
+    font-size: 0.95em;
+    color: var(--text);
+  }
+  .result-insight.visible { display: block; }
+  .result-insight strong { color: var(--accent); }
+
+  /* Review Cards */
+  .review-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .review-card:hover { box-shadow: var(--shadow-hover); }
+  .review-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 0.85em;
+    color: var(--text-secondary);
+  }
+  .review-stars { color: #f9ca24; letter-spacing: 1px; }
+  .review-original {
+    font-size: 0.95em;
+    line-height: 1.7;
+    margin-bottom: 10px;
+  }
+  .review-translation {
+    display: none;
+    background: #f8f8f6;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 0.9em;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    border-left: 3px solid var(--warm);
+    animation: fadeIn 0.3s ease;
+  }
+  .review-translation.visible { display: block; }
+  .review-toggle {
+    font-size: 0.82em;
+    color: var(--accent);
+    cursor: pointer;
+    font-weight: 600;
+    margin-top: 6px;
+    display: inline-block;
+  }
+  .review-toggle:hover { text-decoration: underline; }
+
+  /* Ranking Quiz */
+  .rank-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 20px;
+  }
+  .rank-item {
+    display: flex;
+    align-items: center;
+    padding: 14px 18px;
+    background: var(--card-bg);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 0.95em;
+    margin-bottom: 10px;
+  }
+  .rank-item:hover:not(.revealed) { border-color: var(--accent-light); }
+  .rank-badge {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: #f0f0f0;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800;
+    font-size: 0.85em;
+    margin-right: 14px;
+    flex-shrink: 0;
+    transition: all 0.5s;
+  }
+  .rank-item.revealed .rank-badge {
+    background: var(--accent);
+    color: white;
+  }
+  .rank-item.revealed { border-color: var(--accent-light); }
+  .rank-mentions {
+    margin-left: auto;
+    font-size: 0.82em;
+    color: var(--text-secondary);
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.5s;
+  }
+  .rank-item.revealed .rank-mentions { opacity: 1; }
+  .rank-review {
+    display: none;
+    margin: -2px 0 10px 0;
+    animation: fadeIn 0.4s ease;
+  }
+  .rank-review.visible { display: block; }
+
+  /* Region Quiz */
+  .region-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  @media (max-width: 500px) {
+    .region-grid { grid-template-columns: 1fr; }
+  }
+  .region-card {
+    background: var(--card-bg);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.3s;
+  }
+  .region-card:hover:not(.flipped) {
+    border-color: var(--accent-light);
+    transform: translateY(-2px);
+  }
+  .region-flags { font-size: 2em; margin-bottom: 8px; }
+  .region-name {
+    font-weight: 700;
+    font-size: 0.95em;
+    margin-bottom: 6px;
+  }
+  .region-answer {
+    display: none;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    font-size: 0.88em;
+    color: var(--accent);
+    font-weight: 600;
+    line-height: 1.5;
+    animation: fadeIn 0.3s ease;
+  }
+  .region-card.flipped {
+    border-color: var(--accent);
+    background: var(--accent-bg);
+  }
+  .region-card.flipped .region-answer { display: block; }
+  .region-hint {
+    font-size: 0.82em;
+    color: var(--text-secondary);
+  }
+  .region-card.flipped .region-hint { display: none; }
+  .region-review {
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+  .region-review.visible { display: block; }
+
+  /* Navigation */
+  .quiz-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .nav-btn {
+    padding: 12px 28px;
+    border-radius: 50px;
+    font-size: 0.95em;
+    font-weight: 600;
+    cursor: pointer;
+    border: 2px solid var(--accent);
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .nav-btn.primary { background: var(--accent); color: white; }
+  .nav-btn.primary:hover { background: #5a4bd1; }
+  .nav-btn.secondary { background: transparent; color: var(--accent); }
+  .nav-btn.secondary:hover { background: var(--accent-bg); }
+
+  /* Progress bar */
+  .progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--coral));
+    transition: width 0.5s ease;
+    z-index: 100;
+  }
+
+  /* Summary Page */
+  .summary-section {
+    display: none;
+    padding: 40px 0;
+    animation: fadeIn 0.6s ease;
+  }
+  .summary-section.active { display: block; }
+  .summary-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .summary-card h3 {
+    font-size: 1.1em;
+    margin-bottom: 10px;
+    color: var(--accent);
+  }
+  .summary-card p {
+    font-size: 0.95em;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+  .summary-card ul { list-style: none; padding: 0; }
+  .summary-card li {
+    padding: 6px 0;
+    font-size: 0.95em;
+    color: var(--text-secondary);
+  }
+  .summary-card li::before {
+    content: '→ ';
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .text-center { text-align: center; }
+  .mt-24 { margin-top: 24px; }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar" style="width: 0%"></div>
+
+<div class="container">
+
+  <!-- LANDING -->
+  <div class="landing" id="landing">
+    <h1>Noji 리뷰 인사이트 퀴즈</h1>
+    <p class="subtitle">3,436개의 실제 유저 리뷰에서 발견한 인사이트</p>
+    <p class="subtitle" style="font-size:0.9em; color:#999;">48개국 · 1년간의 Google Play & App Store 리뷰 분석</p>
+    <div class="stats">
+      <div class="stat"><div class="num">3,436</div><div class="label">리뷰 수</div></div>
+      <div class="stat"><div class="num">48</div><div class="label">국가</div></div>
+      <div class="stat"><div class="num">4</div><div class="label">퀴즈</div></div>
+    </div>
+    <button class="btn" onclick="startQuiz()">퀴즈 시작하기</button>
+  </div>
+
+  <!-- ===== QUIZ 1 ===== -->
+  <div class="quiz-section" id="quiz1">
+    <div class="quiz-header">
+      <div class="quiz-number">1</div>
+      <h2>사람들은 왜 Noji를 사용할까요?</h2>
+      <p>가장 많은 비율을 차지하는 사용 목적은 무엇일까요?</p>
+    </div>
+
+    <div class="choice-list" id="q1choices" data-correct="exam" data-quiz="quiz1">
+
+      <button class="choice-btn" onclick="submitChoice(this)" data-value="exam">
+        <span class="marker">A</span>시험/자격증 준비
+      </button>
+      <div class="choice-review" data-for="exam">
+        <div class="review-card" onclick="toggleTranslation(this)">
+          <div class="review-meta"><span>🇺🇸 US</span><span class="review-stars">★★★★★</span><span>2025-10-23</span></div>
+          <div class="review-original">"I've been using Noji for my MCAT prep and honestly, it's pretty awesome! The flashcards are gorgeous and make studying less of a chore. Plus, the ability to share decks with my study group is a total game changer."</div>
+          <span class="review-toggle">한국어 번역 보기 ▾</span>
+          <div class="review-translation">"MCAT 준비를 위해 Noji를 사용하고 있는데, 정말 좋아요! 플래시카드가 예쁘고 공부가 덜 힘들게 느껴져요. 스터디 그룹과 덱을 공유할 수 있는 기능도 완전 게임체인저입니다."</div>
+        </div>
+      </div>
+
+      <button class="choice-btn" onclick="submitChoice(this)" data-value="lang">
+        <span class="marker">B</span>언어 학습
+      </button>
+      <div class="choice-review" data-for="lang">
+        <div class="review-card" onclick="toggleTranslation(this)">
+          <div class="review-meta"><span>🇨🇦 CA</span><span class="review-stars">★★★★★</span><span>2026-03-02</span></div>
+          <div class="review-original">"I've been using Noji for a while now to learn Chinese and honestly it's been a game changer! The feeling of seeing my card count slowly fall is so motivating — it feels like I'm actually making progress every time I study."</div>
+          <span class="review-toggle">한국어 번역 보기 ▾</span>
+          <div class="review-translation">"중국어를 배우기 위해 Noji를 꽤 오래 사용했는데, 정말 게임체인저예요! 카드 수가 줄어드는 걸 보면 정말 동기 부여가 되고, 공부할 때마다 실제로 진전이 있다는 느낌이 들어요."</div>
+        </div>
+      </div>
+
+      <button class="choice-btn" onclick="submitChoice(this)" data-value="academic">
+        <span class="marker">C</span>일반 학업
+      </button>
+      <div class="choice-review" data-for="academic">
+        <div class="review-card" onclick="toggleTranslation(this)">
+          <div class="review-meta"><span>🇨🇦 CA</span><span class="review-stars">★★★★★</span><span>2026-03-16</span></div>
+          <div class="review-original">"Noji has seriously been my lifesaver! I'm in those never-ending finals and it's like my brain is in survival mode — this app is my life support. The smooth performance and clear design make it super easy to use, even when I'm half-asleep during my late-night study sessions."</div>
+          <span class="review-toggle">한국어 번역 보기 ▾</span>
+          <div class="review-translation">"Noji는 정말 생명의 은인이에요! 끝없는 기말고사 속에서 뇌가 생존 모드인데, 이 앱이 생명줄이에요. 부드러운 성능과 깔끔한 디자인 덕분에 새벽 공부 중 반쯤 잠든 상태에서도 쉽게 사용할 수 있어요."</div>
+        </div>
+      </div>
+
+      <button class="choice-btn" onclick="submitChoice(this)" data-value="switch">
+        <span class="marker">D</span>다른 앱에서 전환
+      </button>
+      <div class="choice-review" data-for="switch">
+        <div class="review-card" onclick="toggleTranslation(this)">
+          <div class="review-meta"><span>🇦🇺 AU</span><span class="review-stars">★★★★★</span><span>2025-09-26</span></div>
+          <div class="review-original">"Honestly, this is an amazing app. I hate using quizlet because there's just too many buttons for no reason and I just needed something quick and simple that takes little effort to make a good pack of cards. So yeah I HIGHLY reccomend this app if all you need is flashcards."</div>
+          <span class="review-toggle">한국어 번역 보기 ▾</span>
+          <div class="review-translation">"솔직히 이건 놀라운 앱이에요. Quizlet은 쓸데없는 버튼이 너무 많아서 싫었는데, 저한테 필요한 건 빠르고 간단하게 좋은 카드 팩을 만들 수 있는 거였어요. 플래시카드만 필요하다면 이 앱을 강력 추천해요."</div>
+        </div>
+      </div>
+
+      <button class="choice-btn" onclick="submitChoice(this)" data-value="med">
+        <span class="marker">E</span>의학/과학 공부
+      </button>
+      <div class="choice-review" data-for="med">
+        <div class="review-card" onclick="toggleTranslation(this)">
+          <div class="review-meta"><span>🇪🇸 ES</span><span class="review-stars">★★★★☆</span><span>2026-03-02</span></div>
+          <div class="review-original">"Noji ha sido mi mejor aliado para estudiar anatomía. Me encanta ver cómo la cantidad de tarjetas que tengo que repasar va bajando, es super motivador! Siento que me acerco cada vez más a mi examen."</div>
+          <span class="review-toggle">한국어 번역 보기 ▾</span>
+          <div class="review-translation">"해부학 공부를 위한 최고의 동반자가 되었어요. 복습해야 할 카드 수가 줄어드는 걸 보면 정말 동기 부여가 돼요! 시험에 점점 가까워지고 있다는 느낌이 들어요."</div>
+        </div>
+      </div>
+
+      <button class="choice-btn" onclick="submitChoice(this)" data-value="pro">
+        <span class="marker">F</span>자기계발/전문직
+      </button>
+      <div class="choice-review" data-for="pro">
+        <div class="review-card" onclick="toggleTranslation(this)">
+          <div class="review-meta"><span>🇺🇸 US</span><span class="review-stars">★★★★★</span><span>2026-03-03</span></div>
+          <div class="review-original">"It's a game changer for my chinese studies! With my super busy schedule, Noji fits right into my day. I can study for just 10 mins here and there instead of spending an hour like I used to. The AI card creation is cool too, makes customizing my decks a breeze."</div>
+          <span class="review-toggle">한국어 번역 보기 ▾</span>
+          <div class="review-translation">"중국어 공부의 게임체인저예요! 바쁜 일정 속에서도 Noji가 딱 맞아요. 예전처럼 한 시간씩 공부할 필요 없이 여기저기 10분씩 공부할 수 있어요. AI 카드 생성도 덱 커스터마이징을 정말 쉽게 해줘요."</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="result-chart" id="q1chart">
+      <div class="bar-item">
+        <div class="bar-label"><span>시험/자격증 준비</span><span>~37%</span></div>
+        <div class="bar-track"><div class="bar-fill bar-1" data-width="37"></div></div>
+      </div>
+      <div class="bar-item">
+        <div class="bar-label"><span>언어 학습</span><span>~22%</span></div>
+        <div class="bar-track"><div class="bar-fill bar-2" data-width="22"></div></div>
+      </div>
+      <div class="bar-item">
+        <div class="bar-label"><span>일반 학업</span><span>~18%</span></div>
+        <div class="bar-track"><div class="bar-fill bar-3" data-width="18"></div></div>
+      </div>
+      <div class="bar-item">
+        <div class="bar-label"><span>다른 앱에서 전환</span><span>~9%</span></div>
+        <div class="bar-track"><div class="bar-fill bar-4" data-width="9"></div></div>
+      </div>
+      <div class="bar-item">
+        <div class="bar-label"><span>의학/과학 공부</span><span>~8%</span></div>
+        <div class="bar-track"><div class="bar-fill bar-5" data-width="8"></div></div>
+      </div>
+      <div class="bar-item">
+        <div class="bar-label"><span>자기계발/전문직</span><span>~6%</span></div>
+        <div class="bar-track"><div class="bar-fill bar-6" data-width="6"></div></div>
+      </div>
+    </div>
+
+    <div class="result-insight" id="q1insight">
+      <strong>시험/자격증 준비</strong>가 가장 큰 사용 목적입니다. MCAT, 공무원 시험(concursos), 간호사 자격증 등 고위험 시험 준비를 위해 Noji를 선택하는 유저가 가장 많았습니다. 특히 브라질과 미국에서 이 경향이 두드러집니다.
+    </div>
+
+    <div class="quiz-nav">
+      <span></span>
+      <button class="nav-btn primary" onclick="goToQuiz(2)">다음 퀴즈 →</button>
+    </div>
+  </div>
+
+  <!-- ===== QUIZ 2 ===== -->
+  <div class="quiz-section" id="quiz2">
+    <div class="quiz-header">
+      <div class="quiz-number">2</div>
+      <h2>사람들이 가장 만족하는 기능은?</h2>
+      <p>리뷰에서 가장 많이 언급된 기능 1위를 맞춰보세요</p>
+    </div>
+
+    <div class="choice-list" id="q2choices" data-correct="ai" data-quiz="quiz2">
+
+      <button class="choice-btn" onclick="submitChoice(this)" data-value="ai">
+        <span class="marker">A</span>AI 카드 생성
+      </button>
+      <div class="choice-review" data-for="ai">
+        <div class="review-card" onclick="toggleTranslation(this)">
+          <div class="review-meta"><span>🇹🇷 TR</span><span class="review-stars">★★★★★</span><span>2026-03-16</span></div>
+          <div class="review-original">"I've been trying out Noji for a bit now, and honestly, it's super refreshing. The clean layout and beautiful cards really keep me focused. Plus, the AI card creation is a game changer. I rarely ever review apps, but Noji just stood out."</div>
+          <span class="review-toggle">한국어 번역 보기 ▾</span>
+          <div class="review-translation">"Noji를 잠깐 사용해봤는데, 정말 신선해요. 깔끔한 레이아웃과 예쁜 카드 덕분에 집중이 잘 돼요. 게다가 AI 카드 생성은 완전 게임체인저예요. 앱 리뷰를 거의 안 쓰는 편인데, Noji는 눈에 띄었어요."</div>
+        </div>
+      </div>
+
+      <button class="choice-btn" onclick="submitChoice(this)" data-value="reminder">
+        <span class="marker">B</span>학습 리마인더
+      </button>
+      <div class="choice-review" data-for="reminder">
+        <div class="review-card" onclick="toggleTranslation(this)">
+          <div class="review-meta"><span>🇺🇸 US</span><span class="review-stars">★★★★★</span><span>2026-01-30</span></div>
+          <div class="review-original">"Noji has really changed the game for my studying! It's super motivating to see the card count go down. Also love the study reminders that keep me on track! Oh and the AI card creation is a game changer, helps me focus on what I need."</div>
+          <span class="review-toggle">한국어 번역 보기 ▾</span>
+          <div class="review-translation">"Noji가 공부를 정말 바꿔놨어요! 카드 수가 줄어드는 걸 보면 동기부여가 돼요. 학습 리마인더 덕분에 꾸준히 할 수 있고, AI 카드 생성도 제가 필요한 것에 집중하게 해줘요."</div>
+        </div>
+      </div>
+
+      <button class="choice-btn" onclick="submitChoice(this)" data-value="offline">
+        <span class="marker">C</span>오프라인 모드
+      </button>
+      <div class="choice-review" data-for="offline">
+        <div class="review-card" onclick="toggleTranslation(this)">
+          <div class="review-meta"><span>🇲🇽 MX</span><span class="review-stars">★★★★☆</span><span>2026-03-04</span></div>
+          <div class="review-original">"Desde que empecé a usar Noji, ya no temo tanto estudiar. Las tarjetas son hermosas y la interfaz es super amigable. El modo offline es un gran plus porque puedo estudiar donde quiera."</div>
+          <span class="review-toggle">한국어 번역 보기 ▾</span>
+          <div class="review-translation">"Noji를 쓰기 시작한 후 공부가 덜 두려워졌어요. 카드가 예쁘고 인터페이스가 친절해요. 오프라인 모드 덕분에 어디서든 공부할 수 있어서 정말 좋아요."</div>
+        </div>
+      </div>
+
+      <button class="choice-btn" onclick="submitChoice(this)" data-value="sync">
+        <span class="marker">D</span>기기 간 동기화
+      </button>
+      <div class="choice-review" data-for="sync">
+        <div class="review-card" onclick="toggleTranslation(this)">
+          <div class="review-meta"><span>🇫🇷 FR</span><span class="review-stars">★★★☆☆</span><span>2026-03-14</span></div>
+          <div class="review-original">"J'utilise Noji tous les jours. L'interface est très claire. J'apprécie le fait de pouvoir synchroniser mes cartes entre mes appareils, c'est très pratique. Les decks partageables sont un gros +."</div>
+          <span class="review-toggle">한국어 번역 보기 ▾</span>
+          <div class="review-translation">"매일 Noji를 사용하고 있어요. 인터페이스가 정말 깔끔해요. 기기 간 카드 동기화가 가능해서 정말 편리해요. 덱 공유 기능도 큰 장점이에요."</div>
+        </div>
+      </div>
+
+      <button class="choice-btn" onclick="submitChoice(this)" data-value="sr">
+        <span class="marker">E</span>간격 반복 학습
+      </button>
+      <div class="choice-review" data-for="sr">
+        <div class="review-card" onclick="toggleTranslation(this)">
+          <div class="review-meta"><span>🇨🇦 CA</span><span class="review-stars">★★★★☆</span><span>2026-03-02</span></div>
+          <div class="review-original">"Unlike other apps, I actually remember stuff from weeks ago. It's like the info really sticks this time around. Plus, the interface is super friendly and minimalistic — just the way I like it. No distracting tools or gimmicks, just pure studying!"</div>
+          <span class="review-toggle">한국어 번역 보기 ▾</span>
+          <div class="review-translation">"다른 앱과 달리 몇 주 전에 배운 것도 실제로 기억이 나요. 정보가 정말 머리에 남는 느낌이에요. 인터페이스도 미니멀하고 친절해서 딱 제 스타일이에요. 순수하게 공부만!"</div>
+        </div>
+      </div>
+
+      <button class="choice-btn" onclick="submitChoice(this)" data-value="theme">
+        <span class="marker">F</span>테마/커스터마이징
+      </button>
+      <div class="choice-review" data-for="theme">
+        <div class="review-card" onclick="toggleTranslation(this)">
+          <div class="review-meta"><span>🇨🇦 CA</span><span class="review-stars">★★★★★</span><span>2026-03-07</span></div>
+          <div class="review-original">"The pre-made decks are super helpful and the spaced repetition really works for me. Plus, the design is so clean and modern. I tried different themes and they're all nice. The desktop version is a bonus for studying on my laptop."</div>
+          <span class="review-toggle">한국어 번역 보기 ▾</span>
+          <div class="review-translation">"기성 덱이 정말 유용하고 간격 반복이 저한테 잘 맞아요. 디자인이 깔끔하고 현대적이에요. 다양한 테마를 써봤는데 다 예뻐요. 데스크톱 버전도 노트북 공부에 보너스예요."</div>
+        </div>
+      </div>
+
+      <button class="choice-btn" onclick="submitChoice(this)" data-value="deck">
+        <span class="marker">G</span>기성 덱
+      </button>
+      <div class="choice-review" data-for="deck">
+        <div class="review-card" onclick="toggleTranslation(this)">
+          <div class="review-meta"><span>🇨🇦 CA</span><span class="review-stars">★★★★☆</span><span>2026-03-01</span></div>
+          <div class="review-original">"Noji has saved me soooo much time. I used to spend ages making my own flashcards, but the pre-made decks are a lifesaver. The spaced repetition is super efficient, too – I feel like I'm actually learning instead of cramming."</div>
+          <span class="review-toggle">한국어 번역 보기 ▾</span>
+          <div class="review-translation">"Noji 덕분에 시간이 정말 많이 절약됐어요. 예전에는 직접 플래시카드 만드느라 시간을 많이 썼는데, 기성 덱이 정말 생명의 은인이에요. 간격 반복도 효율적이어서 벼락치기가 아니라 진짜 배우는 느낌이에요."</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="result-chart" id="q2chart">
+      <div class="bar-item">
+        <div class="bar-label"><span>1. AI 카드 생성</span><span>~557회</span></div>
+        <div class="bar-track"><div class="bar-fill bar-1" data-width="100"></div></div>
+      </div>
+      <div class="bar-item">
+        <div class="bar-label"><span>2. 학습 리마인더</span><span>~494회</span></div>
+        <div class="bar-track"><div class="bar-fill bar-2" data-width="89"></div></div>
+      </div>
+      <div class="bar-item">
+        <div class="bar-label"><span>3. 오프라인 모드</span><span>~439회</span></div>
+        <div class="bar-track"><div class="bar-fill bar-3" data-width="79"></div></div>
+      </div>
+      <div class="bar-item">
+        <div class="bar-label"><span>4. 기기 간 동기화</span><span>~277회</span></div>
+        <div class="bar-track"><div class="bar-fill bar-4" data-width="50"></div></div>
+      </div>
+      <div class="bar-item">
+        <div class="bar-label"><span>5. 간격 반복 학습</span><span>~190회</span></div>
+        <div class="bar-track"><div class="bar-fill bar-5" data-width="34"></div></div>
+      </div>
+      <div class="bar-item">
+        <div class="bar-label"><span>6. 테마/커스터마이징</span><span>~176회</span></div>
+        <div class="bar-track"><div class="bar-fill bar-6" data-width="32"></div></div>
+      </div>
+      <div class="bar-item">
+        <div class="bar-label"><span>7. 기성 덱</span><span>~152회</span></div>
+        <div class="bar-track"><div class="bar-fill bar-7" data-width="27"></div></div>
+      </div>
+    </div>
+
+    <div class="result-insight" id="q2insight">
+      <strong>AI 카드 생성</strong>이 가장 많이 언급된 기능입니다! 유저들은 직접 카드를 만드는 시간을 절약해주는 AI 기능을 가장 높이 평가했습니다. 2위와 3위인 학습 리마인더와 오프라인 모드도 근접하게 뒤따르며, "습관 형성"과 "어디서나 학습"이라는 핵심 니즈를 충족합니다.
+    </div>
+
+    <div class="quiz-nav">
+      <button class="nav-btn secondary" onclick="goToQuiz(1)">← 이전</button>
+      <button class="nav-btn primary" onclick="goToQuiz(3)">다음 퀴즈 →</button>
+    </div>
+  </div>
+
+  <!-- ===== QUIZ 3 ===== -->
+  <div class="quiz-section" id="quiz3">
+    <div class="quiz-header">
+      <div class="quiz-number">3</div>
+      <h2>지역별 주요 사용자 그룹은?</h2>
+      <p>각 지역 카드를 클릭해서 주요 사용자 그룹을 확인하세요</p>
+    </div>
+
+    <div class="region-grid">
+      <div class="region-card" onclick="flipRegion(this, 0)">
+        <div class="region-flags">🇧🇷🇵🇹</div>
+        <div class="region-name">브라질 / 포르투갈</div>
+        <div class="region-hint">클릭하여 확인</div>
+        <div class="region-answer">대학생 & 공무원 시험 준비생<br><small style="color:var(--text-secondary)">(concursos/vestibular)</small></div>
+      </div>
+      <div class="region-card" onclick="flipRegion(this, 1)">
+        <div class="region-flags">🇺🇸🇨🇦</div>
+        <div class="region-name">미국 / 캐나다</div>
+        <div class="region-hint">클릭하여 확인</div>
+        <div class="region-answer">의대생 & 전문직 시험 준비<br><small style="color:var(--text-secondary)">MCAT, 간호사, 자격증</small></div>
+      </div>
+      <div class="region-card" onclick="flipRegion(this, 2)">
+        <div class="region-flags">🇪🇸🇲🇽</div>
+        <div class="region-name">스페인어권</div>
+        <div class="region-hint">클릭하여 확인</div>
+        <div class="region-answer">의대/법대생 + 영어 학습자</div>
+      </div>
+      <div class="region-card" onclick="flipRegion(this, 3)">
+        <div class="region-flags">🇩🇪🇫🇷</div>
+        <div class="region-name">서유럽</div>
+        <div class="region-hint">클릭하여 확인</div>
+        <div class="region-answer">대학생 — 효율적 학습 추구<br><small style="color:var(--text-secondary)">시간 절약 중시</small></div>
+      </div>
+      <div class="region-card" onclick="flipRegion(this, 4)">
+        <div class="region-flags">🇯🇵🇰🇷🇨🇳</div>
+        <div class="region-name">동아시아</div>
+        <div class="region-hint">클릭하여 확인</div>
+        <div class="region-answer">외국어 학습자<br><small style="color:var(--text-secondary)">영어, 일본어, 중국어, 한국어</small></div>
+      </div>
+      <div class="region-card" onclick="flipRegion(this, 5)">
+        <div class="region-flags">🇷🇺🇹🇷🇦🇪</div>
+        <div class="region-name">러시아/터키/중동</div>
+        <div class="region-hint">클릭하여 확인</div>
+        <div class="region-answer">다목적 학습자<br><small style="color:var(--text-secondary)">아랍어/러시아어 지원 요청 多</small></div>
+      </div>
+    </div>
+
+    <!-- Per-region review cards (appear below grid as regions flip) -->
+    <div class="region-review" id="q3review0">
+      <div class="review-card" onclick="toggleTranslation(this)">
+        <div class="review-meta"><span>🇧🇷 BR</span><span class="review-stars">★★★★☆</span><span>2026-03-16</span></div>
+        <div class="review-original">"Adorei o Noji! Dois amigos meus estavam usando e me recomendaram, então resolvi tentar e não me arrependo nem um pouco! A interface é super amável e as cartas são muito bonitas, o que torna o estudo bem mais divertido."</div>
+        <span class="review-toggle">한국어 번역 보기 ▾</span>
+        <div class="review-translation">"Noji가 너무 좋아요! 친구 두 명이 사용하고 있어서 추천해줬는데, 시도해보길 정말 잘했어요! 인터페이스가 정말 친절하고 카드가 너무 예뻐서 공부가 훨씬 재밌어졌어요."</div>
+      </div>
+    </div>
+    <div class="region-review" id="q3review1">
+      <div class="review-card" onclick="toggleTranslation(this)">
+        <div class="review-meta"><span>🇺🇸 US</span><span class="review-stars">★★★★★</span><span>2025-10-23</span></div>
+        <div class="review-original">"I've been using Noji for my MCAT prep and honestly, it's pretty awesome! The flashcards are gorgeous and make studying less of a chore. Plus, the ability to share decks with my study group is a total game changer. Helps keep everyone on the same page."</div>
+        <span class="review-toggle">한국어 번역 보기 ▾</span>
+        <div class="review-translation">"MCAT 준비를 위해 Noji를 사용하고 있는데, 정말 좋아요! 플래시카드가 예쁘고 공부가 덜 힘들게 느껴져요. 스터디 그룹과 덱 공유 기능이 완전 게임체인저예요."</div>
+      </div>
+    </div>
+    <div class="region-review" id="q3review2">
+      <div class="review-card" onclick="toggleTranslation(this)">
+        <div class="review-meta"><span>🇪🇸 ES</span><span class="review-stars">★★★★★</span><span>2026-03-13</span></div>
+        <div class="review-original">"Noji ha sido mi arma secreta para estudiar de forma más inteligente. La interfaz es super amigable y me encanta cómo se ven las tarjetas, ¡son preciosas! No perder tiempo creando mis propias tarjetas es un gran plus."</div>
+        <span class="review-toggle">한국어 번역 보기 ▾</span>
+        <div class="review-translation">"Noji는 더 똑똑하게 공부하기 위한 비밀 무기가 되었어요. 인터페이스가 정말 친절하고 카드가 너무 예뻐요! 직접 카드를 만들 필요가 없어서 시간 절약이 정말 커요."</div>
+      </div>
+    </div>
+    <div class="region-review" id="q3review3">
+      <div class="review-card" onclick="toggleTranslation(this)">
+        <div class="review-meta"><span>🇩🇪 DE</span><span class="review-stars">★★★★★</span><span>2026-03-10</span></div>
+        <div class="review-original">"Ich habe die App erst seit kurzer Zeit und es fühlt sich schon jetzt so an, als würde ich gut Fortschritte machen. Manchmal sind die besten Werkzeuge die, die einfach funktionieren und das hier ist genau so."</div>
+        <span class="review-toggle">한국어 번역 보기 ▾</span>
+        <div class="review-translation">"이 앱을 사용한 지 얼마 안 됐는데 벌써 좋은 진전을 이루고 있다는 느낌이 들어요. 때로는 그냥 작동하는 도구가 최고인데, 이 앱이 바로 그래요."</div>
+      </div>
+    </div>
+    <div class="region-review" id="q3review4">
+      <div class="review-card" onclick="toggleTranslation(this)">
+        <div class="review-meta"><span>🇦🇺 AU</span><span class="review-stars">★★★★★</span><span>2025-09-28</span></div>
+        <div class="review-original">"I've been using Noji for a while now to improve my english skills and honestly, it's been a game changer! The clean layout makes it super easy to navigate. The spaced repetition does wonders for me – I can actually see progress!"</div>
+        <span class="review-toggle">한국어 번역 보기 ▾</span>
+        <div class="review-translation">"영어 실력 향상을 위해 Noji를 꽤 오래 사용하고 있는데, 정말 게임체인저예요! 깔끔한 레이아웃 덕분에 탐색이 쉽고, 간격 반복이 정말 효과가 있어서 실제 진전을 볼 수 있어요!"</div>
+      </div>
+    </div>
+    <div class="region-review" id="q3review5">
+      <div class="review-card" onclick="toggleTranslation(this)">
+        <div class="review-meta"><span>🇷🇺 RU</span><span class="review-stars">★★★★★</span><span>2026-01-08</span></div>
+        <div class="review-original">"Noji has def made my study sessions way less painful! Seriously, I used to dread openin' up textbooks, but now I actually look forward to it. Plus, it's so stupid simple to use! I didn't even need a tutorial to figure stuff out."</div>
+        <span class="review-toggle">한국어 번역 보기 ▾</span>
+        <div class="review-translation">"Noji 덕분에 공부 시간이 훨씬 덜 고통스러워졌어요! 교과서 펼치는 게 싫었는데, 이제는 오히려 기대돼요. 정말 바보도 쓸 수 있을 정도로 단순해서 튜토리얼 없이 바로 시작했어요!"</div>
+      </div>
+    </div>
+
+    <div class="result-insight" id="q3insight" style="display:none;">
+      각 지역마다 사용 목적이 다릅니다. <strong>브라질</strong>은 공무원 시험(concursos), <strong>미국</strong>은 의대 시험(MCAT), <strong>동아시아</strong>는 언어 학습이 주요 목적이었습니다. 지역별 맞춤 마케팅이 가능한 핵심 인사이트입니다.
+    </div>
+
+    <div class="quiz-nav">
+      <button class="nav-btn secondary" onclick="goToQuiz(2)">← 이전</button>
+      <button class="nav-btn primary" onclick="goToQuiz(4)">다음 퀴즈 →</button>
+    </div>
+  </div>
+
+  <!-- ===== QUIZ 4 ===== -->
+  <div class="quiz-section" id="quiz4">
+    <div class="quiz-header">
+      <div class="quiz-number">4</div>
+      <h2>이 앱이 성공한 비결은?</h2>
+      <p>리뷰에서 드러난 성공 요인을 순위별로 확인하세요</p>
+    </div>
+
+    <div class="rank-list" id="q4ranks">
+      <div class="rank-item" onclick="revealRank(this, 0)">
+        <span class="rank-badge">1</span>
+        <span class="rank-text">클릭하여 1위 확인</span>
+        <span class="rank-mentions"></span>
+      </div>
+      <div class="rank-review" id="q4review0">
+        <div class="review-card" onclick="toggleTranslation(this)">
+          <div class="review-meta"><span>🇨🇦 CA</span><span class="review-stars">★★★★☆</span><span>2026-03-04</span></div>
+          <div class="review-original">"Noji is just stupid simple! I didn't even need a tutorial to get started which is a HUGE plus compared to other apps I've tried. The cards are beautiful and it's smooth, which makes studying for my exam much less of a hassle."</div>
+          <span class="review-toggle">한국어 번역 보기 ▾</span>
+          <div class="review-translation">"Noji는 정말 바보도 쓸 수 있을 만큼 단순해요! 다른 앱과 달리 튜토리얼 없이도 바로 시작할 수 있었는데, 이게 정말 큰 장점이에요. 카드가 예쁘고 부드러워서 시험 공부가 훨씬 덜 번거로워요."</div>
+        </div>
+      </div>
+
+      <div class="rank-item" onclick="revealRank(this, 1)">
+        <span class="rank-badge">2</span>
+        <span class="rank-text">클릭하여 2위 확인</span>
+        <span class="rank-mentions"></span>
+      </div>
+      <div class="rank-review" id="q4review1">
+        <div class="review-card" onclick="toggleTranslation(this)">
+          <div class="review-meta"><span>🇵🇹 PT</span><span class="review-stars">★★★★★</span><span>2026-03-13</span></div>
+          <div class="review-original">"Noji tem sido meu verdadeiro truque secreto para estudar! Sério, com tantos assuntos complicados, eu sentia que ia surtar com tantas anotações. Agora, com os flashcards e a repetição espaçada, tudo ficou tão mais claro. Minha ansiedade reduziu muito, e finalmente estou no controle."</div>
+          <span class="review-toggle">한국어 번역 보기 ▾</span>
+          <div class="review-translation">"Noji는 정말 공부를 위한 비밀 무기가 되었어요! 복잡한 과목들 때문에 노트에 파묻혀 미칠 것 같았는데, 플래시카드와 간격 반복 덕분에 모든 것이 훨씬 명확해졌어요. 불안감이 많이 줄었고, 드디어 공부를 컨트롤할 수 있게 되었어요."</div>
+        </div>
+      </div>
+
+      <div class="rank-item" onclick="revealRank(this, 2)">
+        <span class="rank-badge">3</span>
+        <span class="rank-text">클릭하여 3위 확인</span>
+        <span class="rank-mentions"></span>
+      </div>
+      <div class="rank-review" id="q4review2">
+        <div class="review-card" onclick="toggleTranslation(this)">
+          <div class="review-meta"><span>🇫🇷 FR</span><span class="review-stars">★★★★★</span><span>2026-02-09</span></div>
+          <div class="review-original">"Super app pour étudier avec des flashcards ! Je gagne tellement de temps en n'ayant pas à créer mes propres decks, les cartes sont déjà prêtes et c'est génial. Le système de répétition espacée est vraiment efficace."</div>
+          <span class="review-toggle">한국어 번역 보기 ▾</span>
+          <div class="review-translation">"플래시카드로 공부하기에 최고의 앱이에요! 직접 덱을 만들 필요가 없어서 시간이 정말 많이 절약돼요. 카드가 이미 준비되어 있고, 간격 반복 시스템도 정말 효과적이에요."</div>
+        </div>
+      </div>
+
+      <div class="rank-item" onclick="revealRank(this, 3)">
+        <span class="rank-badge">4</span>
+        <span class="rank-text">클릭하여 4위 확인</span>
+        <span class="rank-mentions"></span>
+      </div>
+      <div class="rank-review" id="q4review3">
+        <div class="review-card" onclick="toggleTranslation(this)">
+          <div class="review-meta"><span>🇺🇸 US</span><span class="review-stars">★★★★★</span><span>2026-01-30</span></div>
+          <div class="review-original">"It's super motivating to see the card count go down, it feels like I'm actually making progress instead of just cramming! Also love the study reminders that keep me on track!"</div>
+          <span class="review-toggle">한국어 번역 보기 ▾</span>
+          <div class="review-translation">"카드 수가 줄어드는 걸 보면 벼락치기가 아니라 실제로 진전이 있다는 느낌이 들어서 동기부여가 돼요! 학습 리마인더 덕분에 꾸준히 할 수 있어요!"</div>
+        </div>
+      </div>
+
+      <div class="rank-item" onclick="revealRank(this, 4)">
+        <span class="rank-badge">5</span>
+        <span class="rank-text">클릭하여 5위 확인</span>
+        <span class="rank-mentions"></span>
+      </div>
+      <div class="rank-review" id="q4review4">
+        <div class="review-card" onclick="toggleTranslation(this)">
+          <div class="review-meta"><span>🇧🇷 BR</span><span class="review-stars">★★★★☆</span><span>2026-03-16</span></div>
+          <div class="review-original">"Adorei o Noji! Dois amigos meus estavam usando e me recomendaram, então resolvi tentar e não me arrependo nem um pouco!"</div>
+          <span class="review-toggle">한국어 번역 보기 ▾</span>
+          <div class="review-translation">"Noji가 너무 좋아요! 친구 두 명이 사용하고 있어서 추천해줬는데, 시도해보길 정말 잘했어요!"</div>
+        </div>
+      </div>
+
+      <div class="rank-item" onclick="revealRank(this, 5)">
+        <span class="rank-badge">6</span>
+        <span class="rank-text">클릭하여 6위 확인</span>
+        <span class="rank-mentions"></span>
+      </div>
+      <div class="rank-review" id="q4review5">
+        <div class="review-card" onclick="toggleTranslation(this)">
+          <div class="review-meta"><span>🇨🇦 CA</span><span class="review-stars">★★★★★</span><span>2026-03-15</span></div>
+          <div class="review-original">"Noji has been a game changer for my studying! With Noji, it's super simple to create and study from cards, really love how it just gets out of the way and lets me focus on learning. Honestly, this app has made my study sessions so much smoother."</div>
+          <span class="review-toggle">한국어 번역 보기 ▾</span>
+          <div class="review-translation">"Noji는 공부의 게임체인저예요! 카드 만들기와 학습이 정말 간단하고, 방해 없이 학습에 집중하게 해줘요. 솔직히 이 앱 덕분에 공부 시간이 훨씬 수월해졌어요."</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="result-insight" id="q4insight" style="display:none;">
+      Noji의 가장 강력한 경쟁력은 <strong>극단적 단순함</strong>입니다. "바보도 쓸 수 있다(stupid simple)"는 표현이 수십 건의 리뷰에서 반복적으로 등장했으며, Anki 대비 진입 장벽이 없다는 점이 핵심 차별화 요소입니다.
+    </div>
+
+    <div class="quiz-nav">
+      <button class="nav-btn secondary" onclick="goToQuiz(3)">← 이전</button>
+      <button class="nav-btn primary" onclick="showSummary()">결과 요약 보기 →</button>
+    </div>
+  </div>
+
+  <!-- ===== SUMMARY ===== -->
+  <div class="summary-section" id="summary">
+    <div class="quiz-header">
+      <h2>핵심 인사이트 요약</h2>
+      <p>3,436개 리뷰에서 발견한 Noji의 강점과 기회</p>
+    </div>
+
+    <div class="summary-card">
+      <h3>핵심 성공 요인</h3>
+      <ul>
+        <li><strong>"바보도 쓸 수 있는" 단순함</strong> — Anki 대비 진입 장벽 제로, 튜토리얼 불필요</li>
+        <li><strong>학습 불안 해소</strong> — 정리된 카드 시스템으로 "노트에 파묻히는" 감정 완화</li>
+        <li><strong>AI + 기성 덱으로 시간 절약</strong> — 카드 제작 부담 제거가 핵심 가치</li>
+        <li><strong>마이크로 습관 형성</strong> — 5-10분 세션 + 리마인더 + 진행 피드백</li>
+      </ul>
+    </div>
+
+    <div class="summary-card">
+      <h3>지역별 핵심 전략</h3>
+      <ul>
+        <li><strong>브라질/포르투갈</strong> — 공무원 시험(concursos) 커뮤니티 타겟팅</li>
+        <li><strong>미국/캐나다</strong> — 의대 시험 준비생(MCAT, 간호) 마케팅 강화</li>
+        <li><strong>스페인어권</strong> — 의대/법대 + 영어 학습 듀얼 포지셔닝</li>
+        <li><strong>동아시아</strong> — 언어 학습 콘텐츠 확대</li>
+      </ul>
+    </div>
+
+    <div class="summary-card">
+      <h3>가장 사랑받는 기능 TOP 3</h3>
+      <ul>
+        <li><strong>AI 카드 생성</strong> (~557회 언급) — 구독 전환의 핵심 드라이버</li>
+        <li><strong>학습 리마인더</strong> (~494회 언급) — 습관 형성의 핵심</li>
+        <li><strong>오프라인 모드</strong> (~439회 언급) — 통근/이동 중 학습 니즈 충족</li>
+      </ul>
+    </div>
+
+    <div class="summary-card">
+      <h3>감정적 키워드</h3>
+      <p style="font-size: 1.1em; line-height: 2;">
+        <span style="font-size:1.4em;font-weight:800;color:var(--accent)">Game Changer</span> ·
+        <span style="font-size:1.2em;font-weight:700;color:var(--coral)">Lifesaver</span> ·
+        <span style="font-size:1.1em;font-weight:600;color:var(--success)">Stupid Simple</span> ·
+        <span style="font-size:1.0em;font-weight:600;color:#74b9ff">Secret Weapon</span> ·
+        <span style="font-size:0.95em;color:var(--text-secondary)">Beautiful Cards</span> ·
+        <span style="font-size:0.95em;color:var(--text-secondary)">Less Painful</span>
+      </p>
+    </div>
+
+    <div class="text-center mt-24">
+      <button class="nav-btn secondary" onclick="goToQuiz(4)" style="margin-right:10px">← 이전 퀴즈</button>
+      <button class="nav-btn primary" onclick="restartQuiz()">처음부터 다시</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const successFactors = [
+  { text: '극단적 단순함 — "바보도 쓸 수 있는" 앱', evidence: '튜토리얼 불필요, Anki와의 대비' },
+  { text: '학습 불안 해소', evidence: '"노트에 파묻히다" → 구조화된 안도감' },
+  { text: '시간 절약 — AI 카드 + 기성 덱', evidence: '덱 제작 부담 제거' },
+  { text: '마이크로 습관 형성', evidence: '5-10분 세션 + 리마인더 + 진행 피드백' },
+  { text: '입소문', evidence: '"친구가 추천해서 시작했다" 패턴' },
+  { text: '감정적 보상 — "Game Changer"', evidence: '안도감, 기쁨, 통제감' }
+];
+
+function startQuiz() {
+  document.getElementById('landing').style.display = 'none';
+  goToQuiz(1);
+}
+
+function goToQuiz(n) {
+  document.querySelectorAll('.quiz-section').forEach(s => {
+    s.classList.remove('active');
+    s.style.display = 'none';
+  });
+  document.getElementById('summary').classList.remove('active');
+  document.getElementById('summary').style.display = 'none';
+  const section = document.getElementById('quiz' + n);
+  if (section) {
+    section.classList.add('active');
+    section.style.display = 'block';
+    section.style.animation = 'none';
+    section.offsetHeight;
+    section.style.animation = '';
+  }
+  document.getElementById('progressBar').style.width = (n * 20) + '%';
+}
+
+/* Q1 & Q2: Click a choice → instant feedback with per-choice reviews */
+function submitChoice(btn) {
+  const container = btn.parentElement;
+  if (container.classList.contains('answered')) return;
+  container.classList.add('answered');
+
+  const correctValue = container.dataset.correct;
+  const chosenValue = btn.dataset.value;
+  const quizId = container.dataset.quiz;
+  const prefix = quizId === 'quiz1' ? 'q1' : 'q2';
+
+  // Mark all disabled, highlight correct/wrong
+  container.querySelectorAll('.choice-btn').forEach(b => {
+    b.classList.add('disabled');
+    if (b.dataset.value === correctValue) b.classList.add('correct');
+  });
+  if (chosenValue !== correctValue) btn.classList.add('wrong');
+
+  // Show ALL per-choice review cards
+  container.querySelectorAll('.choice-review').forEach(r => {
+    r.classList.add('visible');
+    r.style.display = 'block';
+  });
+
+  // Show chart + insight
+  animateBars(prefix + 'chart');
+  setTimeout(() => {
+    const insight = document.getElementById(prefix + 'insight');
+    insight.classList.add('visible');
+    insight.style.display = 'block';
+  }, 500);
+}
+
+function animateBars(chartId) {
+  const chart = document.getElementById(chartId);
+  chart.classList.add('visible');
+  chart.style.display = 'block';
+  setTimeout(() => {
+    chart.querySelectorAll('.bar-fill').forEach(bar => {
+      bar.style.width = bar.dataset.width + '%';
+    });
+  }, 100);
+}
+
+/* Q3: Flip region card → show its review below the grid */
+let flippedCount = 0;
+function flipRegion(card, idx) {
+  if (card.classList.contains('flipped')) return;
+  card.classList.add('flipped');
+  flippedCount++;
+
+  // Show this region's review
+  const review = document.getElementById('q3review' + idx);
+  if (review) {
+    review.classList.add('visible');
+    review.style.display = 'block';
+  }
+
+  if (flippedCount >= 3) {
+    setTimeout(() => {
+      document.getElementById('q3insight').style.display = 'block';
+      document.getElementById('q3insight').classList.add('visible');
+    }, 300);
+  }
+}
+
+/* Q4: Sequential rank reveal with per-rank reviews */
+let ranksRevealed = 0;
+function revealRank(item, idx) {
+  if (item.classList.contains('revealed')) return;
+  if (idx !== ranksRevealed) return;
+
+  const factor = successFactors[idx];
+  item.querySelector('.rank-text').textContent = factor.text;
+  item.querySelector('.rank-mentions').textContent = factor.evidence;
+  item.classList.add('revealed');
+
+  const reviewEl = document.getElementById('q4review' + idx);
+  if (reviewEl) {
+    reviewEl.classList.add('visible');
+    reviewEl.style.display = 'block';
+  }
+
+  ranksRevealed++;
+
+  if (ranksRevealed >= 6) {
+    setTimeout(() => {
+      document.getElementById('q4insight').style.display = 'block';
+      document.getElementById('q4insight').classList.add('visible');
+    }, 300);
+  }
+}
+
+function toggleTranslation(card) {
+  if (event) event.stopPropagation();
+  const trans = card.querySelector('.review-translation');
+  const toggle = card.querySelector('.review-toggle');
+  if (trans.classList.contains('visible')) {
+    trans.classList.remove('visible');
+    trans.style.display = 'none';
+    toggle.textContent = '한국어 번역 보기 ▾';
+  } else {
+    trans.classList.add('visible');
+    trans.style.display = 'block';
+    toggle.textContent = '번역 숨기기 ▴';
+  }
+}
+
+function showSummary() {
+  document.querySelectorAll('.quiz-section').forEach(s => {
+    s.classList.remove('active');
+    s.style.display = 'none';
+  });
+  document.getElementById('summary').classList.add('active');
+  document.getElementById('summary').style.display = 'block';
+  document.getElementById('progressBar').style.width = '100%';
+}
+
+function restartQuiz() {
+  flippedCount = 0;
+  ranksRevealed = 0;
+
+  // Reset Q1 & Q2
+  ['q1', 'q2'].forEach(prefix => {
+    const choices = document.getElementById(prefix + 'choices');
+    choices.classList.remove('answered');
+    choices.querySelectorAll('.choice-btn').forEach(b => {
+      b.classList.remove('selected', 'disabled', 'correct', 'wrong');
+    });
+    choices.querySelectorAll('.choice-review').forEach(r => {
+      r.classList.remove('visible');
+      r.style.display = 'none';
+    });
+    const chart = document.getElementById(prefix + 'chart');
+    chart.classList.remove('visible');
+    chart.style.display = 'none';
+    chart.querySelectorAll('.bar-fill').forEach(b => b.style.width = '0');
+    const insight = document.getElementById(prefix + 'insight');
+    insight.classList.remove('visible');
+    insight.style.display = 'none';
+  });
+
+  // Reset Q3
+  document.querySelectorAll('.region-card').forEach(c => c.classList.remove('flipped'));
+  document.querySelectorAll('.region-review').forEach(r => {
+    r.classList.remove('visible');
+    r.style.display = 'none';
+  });
+  document.getElementById('q3insight').style.display = 'none';
+  document.getElementById('q3insight').classList.remove('visible');
+
+  // Reset Q4
+  document.querySelectorAll('#q4ranks .rank-item').forEach((item, i) => {
+    item.classList.remove('revealed');
+    item.querySelector('.rank-text').textContent = '클릭하여 ' + (i+1) + '위 확인';
+    item.querySelector('.rank-mentions').textContent = '';
+  });
+  document.querySelectorAll('.rank-review').forEach(r => {
+    r.classList.remove('visible');
+    r.style.display = 'none';
+  });
+  document.getElementById('q4insight').style.display = 'none';
+  document.getElementById('q4insight').classList.remove('visible');
+
+  // Reset all translations
+  document.querySelectorAll('.review-translation').forEach(t => {
+    t.classList.remove('visible');
+    t.style.display = 'none';
+  });
+  document.querySelectorAll('.review-toggle').forEach(t => {
+    t.textContent = '한국어 번역 보기 ▾';
+  });
+
+  // Show landing
+  document.querySelectorAll('.quiz-section').forEach(s => {
+    s.classList.remove('active');
+    s.style.display = 'none';
+  });
+  document.getElementById('summary').classList.remove('active');
+  document.getElementById('summary').style.display = 'none';
+  document.getElementById('progressBar').style.width = '0%';
+  document.getElementById('landing').style.display = 'flex';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+
+</body>
+</html>
